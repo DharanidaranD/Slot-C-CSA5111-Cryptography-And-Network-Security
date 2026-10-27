@@ -1,0 +1,93 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+// Function to find the positions of a character in the 5x5 matrix
+void findPosition(char matrix[5][5], char ch, int &row, int &col) {
+    if (ch == 'J') ch = 'I'; // Standard Playfair convention: treat J as I
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (matrix[i][j] == ch) {
+                row = i;
+                col = j;
+                return;
+            }
+        }
+    }
+}
+
+// Function to decrypt Playfair cipher text
+string decryptPlayfair(string ciphertext, char matrix[5][5]) {
+    string plaintext = "";
+    
+    // Clean text: remove spaces
+    string cleanText = "";
+    for (char c : ciphertext) {
+        if (c != ' ') {
+            cleanText += c;
+        }
+    }
+
+    // Process pairs of characters
+    for (size_t i = 0; i < cleanText.length(); i += 2) {
+        char c1 = cleanText[i];
+        char c2 = cleanText[i + 1];
+        
+        int r1, c1_pos, r2, c2_pos;
+        findPosition(matrix, c1, r1, c1_pos);
+        findPosition(matrix, c2, r2, c2_pos);
+        
+        // Rule 1: Same row -> Shift left by 1 column (with wrap-around)
+        if (r1 == r2) {
+            plaintext += matrix[r1][(c1_pos - 1 + 5) % 5];
+            plaintext += matrix[r2][(c2_pos - 1 + 5) % 5];
+        }
+        // Rule 2: Same column -> Shift up by 1 row (with wrap-around)
+        else if (c1_pos == c2_pos) {
+            plaintext += matrix[(r1 - 1 + 5) % 5][c1_pos];
+            plaintext += matrix[(r2 - 1 + 5) % 5][c2_pos];
+        }
+        // Rule 3: Rectangle -> Swap columns
+        else {
+            plaintext += matrix[r1][c2_pos];
+            plaintext += matrix[r2][c1_pos];
+        }
+    }
+    
+    return plaintext;
+}
+
+int main() {
+    // 5x5 Matrix constructed from your exact image output
+    char matrix[5][5] = {
+        {'R', 'O', 'Y', 'A', 'L'},
+        {'N', 'E', 'W', 'Z', 'D'},
+        {'V', 'B', 'C', 'F', 'G'},
+        {'H', 'I', 'K', 'M', 'P'},
+        {'Q', 'S', 'T', 'U', 'X'}
+    };
+    
+    // Ciphertext from Experiment 9
+    vector<string> cipherBlocks = {
+        "KXJEY", "UREBE", "ZWEHE", "WRYTU", "HEYFS",
+        "KREHE", "GOYFI", "WTTTU", "OLKSY", "CAJPO",
+        "BOTEI", "ZONEW", "BYBNT", "GONEY", "CUZWR", 
+        "GDSON", "SXBOU", "YWRHE", "BAAHY", "USEDQ"
+    };
+    
+    // Concatenate the message into a single string
+    string fullCiphertext = "";
+    for (const string &block : cipherBlocks) {
+        fullCiphertext += block;
+    }
+    
+    cout << "--- Playfair Decryption Program ---" << endl;
+    cout << "Ciphertext: " << fullCiphertext << endl;
+    
+    string decryptedText = decryptPlayfair(fullCiphertext, matrix);
+    cout << "\nDecrypted Text (Raw): " << decryptedText << endl;
+    
+    return 0;
+}
