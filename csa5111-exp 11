@@ -1,0 +1,38 @@
+#include <iostream>
+#include <cmath>
+#include <iomanip>
+
+using namespace std;
+
+// Function to calculate the logarithm base 2 of a factorial (n!)
+double log2Factorial(int n) {
+    double logSum = 0;
+    for (int i = 1; i <= n; i++) {
+        logSum += log2(i);
+    }
+    return logSum;
+}
+
+int main() {
+    cout << "--- Playfair Key Space Analysis ---" << endl;
+
+    // Total possible keys ignoring duplicates: 25!
+    double totalLog2 = log2Factorial(25);
+    
+    // Calculate approximate decimal value for 25!
+    double totalDecimal = 1.0;
+    for (int i = 1; i <= 25; i++) {
+        totalDecimal *= i;
+    }
+
+    cout << "Possible Playfair keys = 25! = " << scientific << setprecision(5) << totalDecimal << endl;
+    cout << "Approximate power of 2 = 2^" << fixed << setprecision(4) << totalLog2 << endl;
+
+    // Effectively unique keys considering matrix symmetries: 25! / 25 = 24!
+    // Symmetries: 5 row shifts x 5 column shifts = 25 identical mappings
+    double uniqueLog2 = log2Factorial(24);
+
+    cout << "Effectively unique keys are approximately 2^" << fixed << setprecision(0) << uniqueLog2 << "." << endl;
+
+    return 0;
+}
