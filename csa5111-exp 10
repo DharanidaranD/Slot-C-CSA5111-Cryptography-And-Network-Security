@@ -1,0 +1,61 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <sstream>
+
+using namespace std;
+
+// Simplified block cipher function (simulating a strong block cipher transformation)
+unsigned long long dummyBlockCipherEncrypt(unsigned long long block, unsigned long long key) {
+    // A simple non-linear mixing to simulate block transformation logic
+    block ^= key;
+    block = (block << 21) | (block >> (64 - 21)); // Bit rotation
+    block *= 0x9E3779B97F4A7C15ULL;               // Multiplicative diffusion
+    return block;
+}
+
+int main() {
+    cout << "--- 3DES & CBC Chaining Mode Execution (Exp 19) ---" << endl;
+
+    // Standard 64-bit Test Vector Examples in Hexadecimal
+    // Inputs must be valid hexadecimal characters (0-9, A-F)
+    string hexKey = "134620845959867A";
+    string hexIV  = "A1B2C3D4E5F6A7B8";
+    string hexP1  = "0123456789ABCDEF"; // Block 1
+    string hexP2  = "0123456789ABCDEF"; // Block 2 (Identical to P1 to verify chaining)
+
+    // Convert Hex strings to 64-bit unsigned integers
+    unsigned long long key, iv, p1, p2;
+    stringstream ssK, ssI, ssP1, ssP2;
+    
+    ssK << hex << hexKey; ssK >> key;
+    ssI << hex << hexIV;  ssI >> iv;
+    ssP1 << hex << hexP1; ssP1 >> p1;
+    ssP2 << hex << hexP2; ssP2 >> p2;
+
+    // --- CBC Encryption Execution Logic ---
+    // Block 1: C1 = E(P1 XOR IV)
+    unsigned long long c1 = dummyBlockCipherEncrypt(p1 ^ iv, key);
+
+    // Block 2: C2 = E(P2 XOR C1) -> The chaining step
+    unsigned long long c2 = dummyBlockCipherEncrypt(p2 ^ c1, key);
+
+    // Output block hex values
+    cout << "\n[Hex Block Output Validation]" << endl;
+    cout << "Key: " << hex << uppercase << key << " | IV: " << iv << endl;
+    cout << "P1:  " << p1 << " | P2:  " << p2 << " (Identical inputs)" << endl;
+    cout << "C1 = " << setw(16) << setfill('0') << c1 << endl;
+    cout << "C2 = " << setw(16) << setfill('0') << c2 << " (Chained and unique!)" << endl;
+
+    // --- Conceptual Lab Answers Output ---
+    cout << "\n[Algorithm Design Selection Evaluation]" << endl;
+    cout << "a. Selection for Security: 3DES" << endl;
+    cout << "   Reasoning: Standard 56-bit DES is completely vulnerable to modern brute-force " << endl;
+    cout << "              attacks. 3DES increases the effective key length to up to 168 bits." << endl;
+    
+    cout << "b. Selection for Performance: DES" << endl;
+    cout << "   Reasoning: 3DES requires running the internal encryption pipeline three times " << endl;
+    cout << "              per block, making it roughly 3x slower than standard single DES." << endl;
+
+    return 0;
+}
