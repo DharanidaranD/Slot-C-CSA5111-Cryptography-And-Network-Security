@@ -1,0 +1,60 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <cctype>
+
+using namespace std;
+
+// Helper function to remove spaces and convert string to uppercase
+string cleanString(string str) {
+    string result = "";
+    for (char c : str) {
+        if (!isspace(c)) {
+            result += toupper(c);
+        }
+    }
+    return result;
+}
+
+int main() {
+    cout << "--- One-Time Pad Vigenere Cipher (Exp 14) ---" << endl;
+
+    // Part (a): Encryption
+    string plaintext1 = "send more money";
+    string cleanP1 = cleanString(plaintext1);
+    vector<int> keyStream1 = {9, 0, 1, 7, 23, 15, 21, 14, 11, 11, 2, 8, 9};
+    
+    string ciphertext = "";
+    for (size_t i = 0; i < cleanP1.length(); i++) {
+        int pIdx = cleanP1[i] - 'A';
+        int cIdx = (pIdx + keyStream1[i]) % 26;
+        ciphertext += (cIdx + 'A');
+    }
+
+    cout << "\n[Part a] Encryption Result:" << endl;
+    cout << "Plaintext:  " << plaintext1 << endl;
+    cout << "Ciphertext: " << ciphertext << endl;
+
+    // Part (b): Finding a new key for alternative decryption
+    string targetPlaintext = "cash not needed";
+    string cleanTarget = cleanString(targetPlaintext);
+    vector<int> recoveredKeyStream;
+
+    for (size_t i = 0; i < ciphertext.length(); i++) {
+        int cIdx = ciphertext[i] - 'A';
+        int tIdx = cleanTarget[i] - 'A';
+        // Formula to find the key: K = (C - P + 26) % 26
+        int kVal = (cIdx - tIdx + 26) % 26;
+        recoveredKeyStream.push_back(kVal);
+    }
+
+    cout << "\n[Part b] Key Discovery for Target Plaintext:" << endl;
+    cout << "Target Plaintext: " << targetPlaintext << endl;
+    cout << "Recovered Key Stream: ";
+    for (int k : recoveredKeyStream) {
+        cout << k << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
