@@ -1,0 +1,56 @@
+#include <stdio.h>
+#include <stdint.h>
+
+void left_shift_64(uint8_t in[8], uint8_t out[8]) {
+    uint8_t overflow = 0;
+    for (int i = 7; i >= 0; i--) {
+        out[i] = (in[i] << 1) | overflow;
+        overflow = (in[i] & 0x80) ? 1 : 0;
+    }
+}
+
+void left_shift_128(uint8_t in[16], uint8_t out[16]) {
+    uint8_t overflow = 0;
+    for (int i = 15; i >= 0; i--) {
+        out[i] = (in[i] << 1) | overflow;
+        overflow = (in[i] & 0x80) ? 1 : 0;
+    }
+}
+
+void print_hex(uint8_t *b, int len) {
+    for (int i = 0; i < len; i++) printf("%02X", b[i]);
+    printf("\n");
+}
+
+int main() {
+    // 64-bit block example (Rb = 0x1B)
+    uint8_t L64[8] = {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+    uint8_t K1_64[8], K2_64[8];
+    left_shift_64(L64, K1_64);
+    if (L64[0] & 0x80) K1_64[7] ^= 0x1B;
+
+    left_shift_64(K1_64, K2_64);
+    if (K1_64[0] & 0x80) K2_64[7] ^= 0x1B;
+
+    // 128-bit block example (Rb = 0x87)
+    uint8_t L128[16] = {0x80,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0x01};
+    uint8_t K1_128[16], K2_128[16];
+    left_shift_128(L128, K1_128);
+    if (L128[0] & 0x80) K1_128[15] ^= 0x87;
+
+    left_shift_128(K1_128, K2_128);
+    if (K1_128[0] & 0x80) K2_128[15] ^= 0x87;
+
+    printf("a. Constants needed:\n");
+    printf("   - 64-bit block  : R64  = 0x000000000000001B (low byte 0x1B)\n");
+    printf("   - 128-bit block : R128 = 0x00...0087 (low byte 0x87)\n\n");
+    printf("b. How it works:\n");
+    printf("   Left-shifting by 1 bit multiplies L by x in GF(2^n). If MSB(L)=1, XORing\n");
+    printf("   with Rb reduces the polynomial modulo the irreducible polynomial.\n\n");
+
+    printf("64-bit  K1: "); print_hex(K1_64, 8);
+    printf("64-bit  K2: "); print_hex(K2_64, 8);
+    printf("128-bit K1: "); print_hex(K1_128, 16);
+    printf("128-bit K2: "); print_hex(K2_128, 16);
+    return 0;
+}

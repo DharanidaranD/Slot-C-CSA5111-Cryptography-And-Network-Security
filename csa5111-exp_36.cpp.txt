@@ -1,0 +1,38 @@
+#include <stdio.h>
+#include <ctype.h>
+
+int gcd(int a, int b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
+
+int modinv(int a, int m) {
+    for (int x = 1; x < m; x++)
+        if ((a * x) % m == 1) return x;
+    return -1;
+}
+
+int main() {
+    printf("a. Limitations on b: None (any integer 0 <= b <= 25 works).\n");
+    printf("b. Disallowed values of a (where gcd(a, 26) != 1): ");
+    for (int a = 0; a < 26; a++) {
+        if (gcd(a, 26) != 1) printf("%d ", a);
+    }
+    printf("\n\n");
+
+    int a = 5, b = 8; // Valid one-to-one key since gcd(5, 26) = 1
+    int a_inv = modinv(a, 26);
+    char msg[] = "AFFINECIPHER";
+    char enc[50], dec[50];
+
+    for (int i = 0; msg[i]; i++) {
+        int p = msg[i] - 'A';
+        int c = (a * p + b) % 26;
+        enc[i] = c + 'A';
+        dec[i] = ((a_inv * (c - b + 26)) % 26) + 'A';
+        enc[i + 1] = dec[i + 1] = '\0';
+    }
+
+    printf("Test with valid key a=%d, b=%d:\n", a, b);
+    printf("Plaintext : %s\nCiphertext: %s\nDecrypted : %s\n", msg, enc, dec);
+    return 0;
+}

@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+int main() {
+    char ct[512];
+    int top_n;
+    const char eng_freq[] = "ETAOINSHRDLCUMWFGYPBVKJXQZ";
+
+    printf("Enter monoalphabetic ciphertext: ");
+    fgets(ct, sizeof(ct), stdin);
+    printf("How many top candidate plaintexts (e.g., 10)? ");
+    scanf("%d", &top_n);
+
+    int counts[26] = {0};
+    for (int i = 0; ct[i]; i++) {
+        if (isalpha(ct[i])) counts[toupper(ct[i]) - 'A']++;
+    }
+
+    int order[26];
+    for (int i = 0; i < 26; i++) order[i] = i;
+    for (int i = 0; i < 25; i++) {
+        for (int j = i + 1; j < 26; j++) {
+            if (counts[order[j]] > counts[order[i]]) {
+                int t = order[i]; order[i] = order[j]; order[j] = t;
+            }
+        }
+    }
+
+    for (int k = 0; k < top_n && k < 25; k++) {
+        char map[26];
+        for (int i = 0; i < 26; i++) map[order[i]] = eng_freq[i];
+        if (k > 0) {
+            char tmp = map[order[k - 1]];
+            map[order[k - 1]] = map[order[k]];
+            map[order[k]] = tmp;
+        }
+
+        printf("Candidate %2d: ", k + 1);
+        for (int i = 0; ct[i] && ct[i] != '\n'; i++) {
+            if (isalpha(ct[i])) printf("%c", map[toupper(ct[i]) - 'A']);
+            else printf("%c", ct[i]);
+        }
+        printf("\n");
+    }
+    return 0;
+}
