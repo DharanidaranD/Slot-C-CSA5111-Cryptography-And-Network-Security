@@ -1,0 +1,24 @@
+#include <stdio.h>
+
+long long eg(long long a, long long b, long long *x, long long *y) {
+    if (!b) { *x = 1; *y = 0; return a; }
+    long long X, Y, g = eg(b, a % b, &X, &Y);
+    *x = Y;
+    *y = X - (a / b) * Y;
+    return g;
+}
+
+int main() {
+    long long n = 3599, e = 31, p = 0, q = 0, phi, d, x, y;
+    for (long long i = 2; i * i <= n; i++) {
+        if (n % i == 0) { p = i; q = n / i; break; }
+    }
+    phi = (p - 1) * (q - 1);
+    eg(e, phi, &x, &y);
+    d = (x % phi + phi) % phi;
+
+    printf("p = %lld, q = %lld\n", p, q);
+    printf("phi(n) = %lld\n", phi);
+    printf("Private key d = %lld\n", d);
+    return 0;
+}

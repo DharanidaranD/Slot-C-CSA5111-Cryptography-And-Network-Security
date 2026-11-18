@@ -1,0 +1,46 @@
+#include <stdio.h>
+
+long long gcd(long long a, long long b) {
+    return b == 0 ? a : gcd(b, a % b);
+}
+
+long long modpow(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp & 1) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp >>= 1;
+    }
+    return res;
+}
+
+long long modinv(long long a, long long m) {
+    long long m0 = m, y = 0, x = 1;
+    while (a > 1) {
+        long long q = a / m, t = m;
+        m = a % m; a = t; t = y;
+        y = x - q * y; x = t;
+    }
+    return (x + m0) % m0;
+}
+
+int main() {
+    long long p = 59, q = 61, n = p * q, e = 31;
+    // Suppose plaintext block M = 118 (which is 2 * 59, sharing factor p=59 with n)
+    long long M = 118;
+    long long C = modpow(M, e, n);
+
+    // Attacker knows C and n, and computes gcd(C, n)
+    long long found_p = gcd(C, n);
+    long long found_q = n / found_p;
+    long long phi = (found_p - 1) * (found_q - 1);
+    long long d = modinv(e, phi);
+
+    printf("Yes, it completely breaks RSA!\n");
+    printf("Since gcd(M, n) = p and C = M^e mod n, gcd(C, n) also equals p.\n");
+    printf("Recovered p = %lld, q = %lld\n", found_p, found_q);
+    printf("Recovered Private Key d = %lld\n", d);
+    printf("Decrypted M = %lld\n", modpow(C, d, n));
+    return 0;
+}
