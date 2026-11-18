@@ -1,0 +1,31 @@
+#include <stdio.h>
+
+// Simple block cipher E_K(M) = M ^ K (for demonstration)
+unsigned char block_cipher(unsigned char m, unsigned char k) {
+    return m ^ k;
+}
+
+unsigned char cbc_mac(unsigned char *blocks, int num_blocks, unsigned char k) {
+    unsigned char state = 0; // IV = 0
+    for (int i = 0; i < num_blocks; i++) {
+        state = block_cipher(state ^ blocks[i], k);
+    }
+    return state;
+}
+
+int main() {
+    unsigned char K = 0x3C; // Secret key unknown to adversary
+    unsigned char X = 0xA5; // Single-block message
+
+    // Step 1: Legitimate MAC for 1-block message X
+    unsigned char T = cbc_mac(&X, 1, K);
+
+    // Step 2: Adversary constructs 2-block message: M1 = X, M2 = X ^ T
+    unsigned char forged_msg[2] = { X, (unsigned char)(X ^ T) };
+    unsigned char T_forged = cbc_mac(forged_msg, 2, K);
+
+    printf("Original 1-block message X   : 0x%02X -> MAC T = 0x%02X\n", X, T);
+    printf("Forged 2-block message X||(X^T): 0x%02X 0x%02X -> MAC = 0x%02X\n", forged_msg[0], forged_msg[1], T_forged);
+    printf("Proof: Block 1 outputs T. Block 2 computes E_K(T ^ (X ^ T)) = E_K(X) = T!\n");
+    return 0;
+}

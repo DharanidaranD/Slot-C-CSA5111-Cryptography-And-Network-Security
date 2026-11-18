@@ -1,0 +1,35 @@
+#include <stdio.h>
+
+long long modinv(long long a, long long m) {
+    long long m0 = m, y = 0, x = 1;
+    while (a > 1) {
+        long long q = a / m, t = m;
+        m = a % m; a = t; t = y;
+        y = x - q * y; x = t;
+    }
+    return (x + m0) % m0;
+}
+
+int main() {
+    long long q = 97, a = 5;   // Public parameters
+    long long xA = 12, xB = 19; // Secrets of Alice and Bob
+
+    // Sent values: yA = xA * a mod q, yB = xB * a mod q
+    long long yA = (xA * a) % q;
+    long long yB = (xB * a) % q;
+
+    // Method to agree on a key: K = xA * yB mod q = xB * yA mod q = xA * xB * a mod q
+    long long keyA = (xA * yB) % q;
+    long long keyB = (xB * yA) % q;
+
+    // Eve intercepts yA, yB and computes a^-1 mod q
+    long long a_inv = modinv(a, q);
+    long long eve_xA = (yA * a_inv) % q;
+    long long eve_xB = (yB * a_inv) % q;
+    long long eve_key = (eve_xA * yB) % q;
+
+    printf("Alice Key = %lld, Bob Key = %lld\n", keyA, keyB);
+    printf("Can Eve find secret numbers? YES: xA = %lld, xB = %lld (via modular inverse).\n", eve_xA, eve_xB);
+    printf("Can Eve break system without secrets? YES: K = yA * yB * a^-1 mod q = %lld.\n", eve_key);
+    return 0;
+}

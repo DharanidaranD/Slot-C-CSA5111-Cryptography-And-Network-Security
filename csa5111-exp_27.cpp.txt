@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <string.h>
+
+long long modpow(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp & 1) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp >>= 1;
+    }
+    return res;
+}
+
+int main() {
+    long long n = 3599, e = 31; // Public key
+    char msg[] = "HELLO";
+    long long cipher[5], lookup[26];
+
+    // Alice encrypts each character (0..25) separately
+    for (int i = 0; i < 5; i++) {
+        cipher[i] = modpow(msg[i] - 'A', e, n);
+    }
+
+    // Most efficient attack: Precompute E(m) = m^e mod n for all 26 letters
+    for (int m = 0; m < 26; m++) {
+        lookup[m] = modpow(m, e, n);
+    }
+
+    printf("No, it is NOT secure (deterministic small message space).\n");
+    printf("Most efficient attack: Chosen-plaintext dictionary attack (26 encryptions).\n");
+    printf("Recovered message: ");
+    for (int i = 0; i < 5; i++) {
+        for (int m = 0; m < 26; m++) {
+            if (cipher[i] == lookup[m]) {
+                printf("%c", 'A' + m);
+                break;
+            }
+        }
+    }
+    printf("\n");
+    return 0;
+}

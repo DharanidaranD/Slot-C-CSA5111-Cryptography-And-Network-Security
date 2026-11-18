@@ -1,0 +1,58 @@
+#include <stdio.h>
+
+int main() {
+    /*
+     * SHA-3 state is a 5x5 matrix of 64-bit lanes = 1600 bits total.
+     * Block size (rate r) = 1024 bits -> 1024 / 64 = 16 lanes.
+     * Capacity (c) = 1600 - 1024 = 576 bits -> 576 / 64 = 9 lanes.
+     * In Keccak-f[1600], theta/rho/pi/chi diffuse nonzero bits across columns/rows.
+     * Specifically, theta XORs column parities into adjacent columns in Round 1,
+     * and the remaining lanes become nonzero in Round 2.
+     */
+    int state[5][5] = {0}; // 0 = all-zero lane, 1 = has at least one nonzero bit
+
+    // Absorb P0 (first 16 lanes in row-major order become nonzero)
+    int count = 0;
+    for (int y = 0; y < 5; y++) {
+        for (int x = 0; x < 5; x++) {
+            if (count < 16) {
+                state[x][y] = 1;
+                count++;
+            }
+        }
+    }
+
+    int rounds = 0;
+    while (1) {
+        int zeros = 0;
+        for (int x = 0; x < 5; x++)
+            for (int y = 0; y < 5; y++)
+                if (state[x][y] == 0) zeros++;
+        if (zeros == 0) break;
+
+        rounds++;
+        int next[5][5];
+        for (int x = 0; x < 5; x++)
+            for (int y = 0; y < 5; y++)
+                next[x][y] = state[x][y];
+
+        // Theta diffusion: if any lane in column (x-1) or (x+1) is nonzero, lane (x,y) becomes nonzero
+        for (int x = 0; x < 5; x++) {
+            int col_prev = 0, col_next = 0;
+            for (int y = 0; y < 5; y++) {
+                col_prev |= state[(x + 4) % 5][y];
+                col_next |= state[(x + 1) % 5][y];
+            }
+            if (col_prev || col_next) {
+                for (int y = 0; y < 5; y++) next[x][y] = 1;
+            }
+        }
+        for (int x = 0; x < 5; x++)
+            for (int y = 0; y < 5; y++)
+                state[x][y] = next[x][y];
+    }
+
+    printf("Rate lanes = 16 (1024 bits), Capacity lanes = 9 (576 bits).\n");
+    printf("Number of rounds until all capacity lanes have at least one nonzero bit: %d round(s) (within the first block permutation).\n", rounds);
+    return 0;
+}
