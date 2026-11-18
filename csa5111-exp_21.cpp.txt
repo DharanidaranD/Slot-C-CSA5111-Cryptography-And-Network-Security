@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <string.h>
+#define B 8
+
+void pad(unsigned char *m, int *n) {
+    int p = B - (*n % B);
+    if (p == 0) p = B;
+    m[(*n)++] = 0x80; // 1 bit followed by 0 bits
+    while (--p) m[(*n)++] = 0;
+}
+
+void enc(unsigned char *a, unsigned char *b) {
+    for (int i = 0; i < B; i++) b[i] = a[i] ^ 0x5A;
+}
+
+void ecb(unsigned char *m, unsigned char *c, int n) {
+    for (int i = 0; i < n; i += B) enc(m + i, c + i);
+}
+
+void cbc(unsigned char *m, unsigned char *c, int n) {
+    unsigned char iv[B] = {0,1,2,3,4,5,6,7}, x[B];
+    for (int i = 0; i < n; i += B) {
+        for (int j = 0; j < B; j++) x[j] = m[i + j] ^ iv[j];
+        enc(x, c + i);
+        for (int j = 0; j < B; j++) iv[j] = c[i + j];
+    }
+}
+
+void cfb(unsigned char *m, unsigned char *c, int n) {
+    unsigned char r[B] = {0,1,2,3,4,5,6,7}, s[B];
+    for (int i = 0; i < n; i += B) {
+        enc(r, s);
+        for (int j = 0; j < B; j++) {
+            c[i + j] = m[i + j] ^ s[j];
+            r[j] = c[i + j];
+        }
+    }
+}
+
+void show(unsigned char *x, int n) {
+    for (int i = 0; i < n; i++) printf("%02X ", x[i]);
+    puts("");
+}
+
+int main() {
+    unsigned char m[256], p[256], c[256];
+    printf("Plaintext: ");
+    fgets((char*)m, 256, stdin);
+    m[strcspn((char*)m, "\n")] = 0;
+    int n = strlen((char*)m);
+    memcpy(p, m, n);
+    pad(p, &n);
+
+    ecb(p, c, n); printf("ECB: "); show(c, n);
+    cbc(p, c, n); printf("CBC: "); show(c, n);
+    cfb(p, c, n); printf("CFB: "); show(c, n);
+
+    printf("\nMotivation: Always adding a padding block removes ambiguity so the receiver can distinguish genuine trailing 0s/0x80 bytes from padding and unambiguously find the end of the message.\n");
+    return 0;
+}
